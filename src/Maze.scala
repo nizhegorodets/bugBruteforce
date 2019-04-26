@@ -1,36 +1,139 @@
 import scala.collection.mutable.ArrayBuffer
 import util.control.Breaks._
+import scala.math.min
+import java.io._
+import java.nio.charset.StandardCharsets
+import java.nio.file.StandardOpenOption
 
-case class Maze(width: Int, height: Int) {
-  private var matrix = Array.ofDim[Int](height, width)
-  private val wall = 1
-  private val notWall = 0
-  private val sourceCell = Cell(1,1)
-  private val destCell = Cell(width - 2, height - 2)
-  var visited = Array.fill[Boolean](width * height)(false)
+case class Maze() {
+  private val matrix = Array.ofDim[Int](mazeProperties.height, mazeProperties.width)
+  private val alg = BruteforceAlg(this)
+  var visited = Array.fill[Boolean](mazeProperties.width * mazeProperties.height)(false)
+
+  def printToFile(steps: String): Unit = {
+    val r = scala.util.Random
+    val fileName = "records/" + steps + "_" + r.nextInt(1000000000).toString
+    val file = new File(fileName)
+    val bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))
+
+    for(i <- 0 until mazeProperties.height){
+      for(j <- 0 until mazeProperties.width){
+        if(matrix(i)(j) == mazeProperties.wall)
+          bw.write("1")
+        else
+          bw.write("0")
+      }
+      bw.newLine()
+    }
+    bw.close()
+  }
 
   def printMatrix: Unit = {
     matrix foreach { row => row foreach print; println }
   }
 
-  def buildWalls: Unit = {
-    for(i <- 0 until width){
-      matrix(0)(i) = wall
-      matrix(height - 1)(i) = wall
+  def printHumanly: Unit = {
+    for(i <- 0 until mazeProperties.height){
+      for(j <- 0 until mazeProperties.width){
+        if(matrix(i)(j) == mazeProperties.wall)
+          print(1)
+        else
+          print(0)
+      }
+      println()
     }
 
-    for(i <- 0 until height){
-      matrix(i)(0) = wall
-      matrix(i)(width - 1) = wall
+  }
+
+  def Matrix: Array[Array[Int]] = {
+    matrix
+  }
+
+  def buildWalls: Unit = {
+    for(i <- 0 until mazeProperties.width){
+      matrix(0)(i) = mazeProperties.wall
+      matrix(mazeProperties.height - 1)(i) = mazeProperties.wall
+    }
+
+    for(i <- 0 until mazeProperties.height){
+      matrix(i)(0) = mazeProperties.wall
+      matrix(i)(mazeProperties.width - 1) = mazeProperties.wall
     }
   }
 
+  def runCheck: Int = {
+    var matrixCopy = matrix.map(_.clone())
+    if (reachability) {
+      val sizeI = mazeProperties.height
+      val sizeJ = mazeProperties.width
+
+      var j = 1
+      var i = 1
+      var di = 1
+      var dj = 0
+      var oneCount = 0
+      var stepCount = 0
+
+      while (true) {
+        if (matrixCopy(i)(j) == 1) {
+          oneCount -= 1
+        }
+        matrixCopy(i)(j) += 1
+
+        if (matrixCopy(i)(j) == 1) {
+          oneCount += 1
+        }
+
+        if (oneCount == 0) {
+          return -1
+        }
+
+        val mi = min(matrixCopy(i + 1)(j), min(matrixCopy(i - 1)(j), min(matrixCopy(i)(j + 1), matrixCopy(i)(j - 1))))
+        if (mi == mazeProperties.wall) {
+          return -1
+        }
+        if (matrixCopy(i + di)(j + dj) == mi) {
+          // nothing
+        }
+        else if (matrixCopy(i + 1)(j) == mi) {
+          di = 1
+          dj = 0
+        }
+        else if (matrixCopy(i)(j + 1) == mi) {
+          di = 0
+          dj = 1
+        }
+        else if (matrixCopy(i - 1)(j) == mi) {
+          di = -1
+          dj = 0
+        }
+        else if (matrixCopy(i)(j - 1) == mi) {
+          di = 0
+          dj = -1
+        }
+        else {
+          println("error by checking")
+        }
+        i += di
+        j += dj
+        stepCount += 1
+        if (i == sizeI - 2 && j == sizeJ - 2) {
+          return stepCount
+        }
+      }
+    }
+    else{
+      return -1
+    }
+    0
+  }
+
   def reachability: Boolean = {
-    var cellsForCheck = getNeighbors(sourceCell)
+    var cellsForCheck = getNeighbors(mazeProperties.sourceCell)
     var ans = false
     breakable {
       while (cellsForCheck.nonEmpty) {
-        if (cellsForCheck.contains(destCell)) {
+        if (cellsForCheck.contains(mazeProperties.destCell)) {
           ans = true
           break
         }
@@ -40,27 +143,27 @@ case class Maze(width: Int, height: Int) {
       }
     }
     // reset visited
-    visited = Array.fill[Boolean](width * height)(false)
+    visited = Array.fill[Boolean](mazeProperties.width * mazeProperties.height)(false)
     ans
   }
 
   def getNeighbors(index : Cell): ArrayBuffer[Cell] ={
-    visited(index.heightShift * width + index.widthShift) = true
+    visited(index.heightShift * mazeProperties.width + index.widthShift) = true
     val neighbors = new ArrayBuffer[Cell](0)
     if (index.widthShift > 1)
       neighbors += Cell(index.widthShift - 1, index.heightShift)
     if (index.heightShift > 1)
       neighbors += Cell(index.widthShift, index.heightShift - 1)
-    if (index.widthShift < width - 2)
+    if (index.widthShift < mazeProperties.width - 2)
       neighbors += Cell(index.widthShift + 1, index.heightShift)
-    if (index.heightShift < height - 2)
+    if (index.heightShift < mazeProperties.height - 2)
       neighbors += Cell(index.widthShift, index.heightShift + 1)
 
     var ans = new ArrayBuffer[Cell](0)
     // delete cell-wall
     for(element <- neighbors){
       if((matrix(element.heightShift)(element.widthShift) == 0)
-        && (!visited(element.heightShift * width + element.widthShift))){
+        && (!visited(element.heightShift * mazeProperties.width + element.widthShift))){
         ans += element
       }
     }
@@ -68,38 +171,13 @@ case class Maze(width: Int, height: Int) {
   }
 
   def inc: Boolean = {
-    var ans = true
-    var curPos = width - 3
-    var curLine = height - 2
-
-    breakable {
-      while (true) {
-        if (matrix(curLine)(curPos) == notWall) {
-          matrix(curLine)(curPos) = wall
-          break
-        }
-        else {
-          matrix(curLine)(curPos) = notWall
-          curPos -= 1
-          if (curPos < 1){
-            curPos = width - 2
-            curLine -= 1
-          }
-          if ((curLine == 1) && (curPos == 1)) {
-            println("finish")
-            ans = false
-            break
-          }
-        }
-      }
-    }
-    ans
+    alg.inc
   }
 }
 
 object Maze {
-  def apply(width: Int, height: Int): Maze = {
-    val ans = new Maze(width, height)
+  def apply(): Maze = {
+    val ans = new Maze
     ans.buildWalls
     ans
   }

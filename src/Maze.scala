@@ -7,7 +7,7 @@ import java.nio.file.StandardOpenOption
 
 case class Maze() {
   private val matrix = Array.ofDim[Int](mazeProperties.height, mazeProperties.width)
-  private val alg = BruteforceAlg(this)
+  private val alg = new CombinationAlg(this, 4)
   var visited = Array.fill[Boolean](mazeProperties.width * mazeProperties.height)(false)
 
   def printToFile(steps: String): Unit = {

@@ -1,3 +1,1 @@
-case class Cell(widthShift: Int, heightShift: Int) {
-
-}
+case class Cell(widthShift: Int, heightShift: Int)

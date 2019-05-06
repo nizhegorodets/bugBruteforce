@@ -1,6 +1,6 @@
 import scala.collection.mutable.ListBuffer
 
-case class CombinationAlg(maze: Maze) extends Algorithm {
+case class DeletingAlg(maze: Maze) extends Algorithm {
   var a = new ListBuffer[Int]()
   var lastCombination = new ListBuffer[Cell]()
   var n = 1
@@ -22,22 +22,22 @@ case class CombinationAlg(maze: Maze) extends Algorithm {
   def inc: Boolean = {
     if(lastCombination.nonEmpty){
       for(cell <- lastCombination)
-        maze.Matrix(cell.widthShift)(cell.heightShift) = 0
+        maze.Matrix(cell.widthShift)(cell.heightShift) = mazeProperties.wall
       lastCombination.clear()
     }
 
     if (iter.hasNext) {
       val combination = iter.next()
 
-        for(index <- combination) {
-          val curCell = convertIndexToCell(index)
-          // check existing wall
-          if (maze.Matrix(curCell.widthShift)(curCell.heightShift) == mazeProperties.notWall) {
-            maze.Matrix(curCell.widthShift)(curCell.heightShift) = mazeProperties.wall
-            lastCombination += curCell
-          }
-          //println(s"$index $curCell")
+      for(index <- combination) {
+        val curCell = convertIndexToCell(index)
+        // check existing wall
+        if (maze.Matrix(curCell.widthShift)(curCell.heightShift) == mazeProperties.wall) {
+          maze.Matrix(curCell.widthShift)(curCell.heightShift) = mazeProperties.notWall
+          lastCombination += curCell
         }
+        //println(s"$index $curCell")
+      }
       true
     }
     else {

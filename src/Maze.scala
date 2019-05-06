@@ -1,13 +1,12 @@
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import util.control.Breaks._
 import scala.math.min
 import java.io._
 import java.nio.charset.StandardCharsets
-import java.nio.file.StandardOpenOption
 
 case class Maze() {
   private val matrix = Array.ofDim[Int](mazeProperties.height, mazeProperties.width)
-  private val alg = new CombinationAlg(this, 4)
+  private val alg = new DeepMutationAlg(this)
   var visited = Array.fill[Boolean](mazeProperties.width * mazeProperties.height)(false)
 
   def printToFile(steps: String): Unit = {
@@ -30,6 +29,34 @@ case class Maze() {
 
   def printMatrix: Unit = {
     matrix foreach { row => row foreach print; println }
+  }
+
+  def getAllNotWallCells: ListBuffer[Cell] = {
+    var ans = new ListBuffer[Cell]()
+
+    for (i <- 1 to mazeProperties.height - 2) {
+      for (j <- 1 to mazeProperties.width - 2) {
+        if(matrix(i)(j) == mazeProperties.notWall) {
+          ans += Cell(i, j)
+          //println(Cell(i, j))
+        }
+      }
+    }
+    ans
+  }
+
+  def getAllWallCells: ListBuffer[Cell] = {
+    var ans = new ListBuffer[Cell]()
+
+    for (i <- 1 to mazeProperties.height - 2) {
+      for (j <- 1 to mazeProperties.width - 2) {
+        if(matrix(i)(j) == mazeProperties.wall) {
+          ans += Cell(i, j)
+          //println(Cell(i, j))
+        }
+      }
+    }
+    ans
   }
 
   def printHumanly: Unit = {
@@ -62,7 +89,7 @@ case class Maze() {
   }
 
   def runCheck: Int = {
-    var matrixCopy = matrix.map(_.clone())
+    val matrixCopy = matrix.map(_.clone())
     if (reachability) {
       val sizeI = mazeProperties.height
       val sizeJ = mazeProperties.width

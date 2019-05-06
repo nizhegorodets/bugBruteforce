@@ -4,14 +4,20 @@ import scala.math.min
 import java.io._
 import java.nio.charset.StandardCharsets
 
+
 case class Maze() {
   private val matrix = Array.ofDim[Int](mazeProperties.height, mazeProperties.width)
-  private val alg = new DeepMutationAlg(this)
+  private val alg = DeepMutationAlg(this)
+  private val sessionID = scala.util.Random.nextInt(1000000000).toString
+
   var visited = Array.fill[Boolean](mazeProperties.width * mazeProperties.height)(false)
 
   def printToFile(steps: String): Unit = {
     val r = scala.util.Random
-    val fileName = "records/" + steps + "_" + r.nextInt(1000000000).toString
+
+    val dir = new File(s"records/$sessionID").mkdir()
+    val random = r.nextInt(1000000000)
+    val fileName = s"records/$sessionID/$steps-" + random.toString
     val file = new File(fileName)
     val bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))
 
@@ -25,10 +31,40 @@ case class Maze() {
       bw.newLine()
     }
     bw.close()
+
+    //draw image
+    val drawer = new Drawer(this, random, fileName)
+    drawer.draw
   }
 
   def printMatrix: Unit = {
     matrix foreach { row => row foreach print; println }
+  }
+
+  def generateRandomMaze: Unit = {
+    var isReachability = false
+
+    while(!isReachability) {
+      val r = scala.util.Random
+      val numberWalls = mazeProperties.minRandom + r.nextInt(mazeProperties.maxRandom - mazeProperties.minRandom)
+      var cells = getAllNotWallCells
+      cells = scala.util.Random.shuffle(cells).take(numberWalls)
+      clearMatrix
+
+      for (i <- cells) {
+        matrix(i.widthShift)(i.heightShift) = mazeProperties.wall
+      }
+      isReachability = reachability
+    }
+    printHumanly
+  }
+
+  def clearMatrix: Unit = {
+    for (i <- 1 to mazeProperties.height - 2) {
+      for (j <- 1 to mazeProperties.width - 2) {
+        matrix(i)(j) = mazeProperties.notWall
+      }
+    }
   }
 
   def getAllNotWallCells: ListBuffer[Cell] = {

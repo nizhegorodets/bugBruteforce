@@ -6,4 +6,6 @@ object mazeProperties {
   def sourceCell = Cell(1,1)
   def destCell = Cell(width - 2, height - 2)
   def cellNumbers = (width - 2)*(height - 2)
+  def minRandom = 150
+  def maxRandom = 250
 }

@@ -6,8 +6,8 @@ import java.nio.charset.StandardCharsets
 
 
 case class Maze() {
-  private val matrix = Array.ofDim[Int](mazeProperties.height, mazeProperties.width)
-  private val alg = DeepMutationAlg(this)
+  var matrix = Array.ofDim[Int](mazeProperties.height, mazeProperties.width)
+  private val alg = new maskAlg(this)
   private val sessionID = scala.util.Random.nextInt(1000000000).toString
 
   var visited = Array.fill[Boolean](mazeProperties.width * mazeProperties.height)(false)
@@ -18,19 +18,19 @@ case class Maze() {
     val dir = new File(s"records/$sessionID").mkdir()
     val random = r.nextInt(1000000000)
     val fileName = s"records/$sessionID/$steps-" + random.toString
-    val file = new File(fileName)
-    val bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))
-
-    for(i <- 0 until mazeProperties.height){
-      for(j <- 0 until mazeProperties.width){
-        if(matrix(i)(j) == mazeProperties.wall)
-          bw.write("1")
-        else
-          bw.write("0")
-      }
-      bw.newLine()
-    }
-    bw.close()
+//    val file = new File(fileName)
+//    val bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))
+//
+//    for(i <- 0 until mazeProperties.height){
+//      for(j <- 0 until mazeProperties.width){
+//        if(matrix(i)(j) == mazeProperties.wall)
+//          bw.write("1")
+//        else
+//          bw.write("0")
+//      }
+//      bw.newLine()
+//    }
+//    bw.close()
 
     //draw image
     val drawer = new Drawer(this, random, fileName)

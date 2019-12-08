@@ -1,9 +1,9 @@
 import scala.util.control.Breaks.{break, breakable}
 
 object Main extends App {
-  while(true) {
-    val mz = Maze()
-    mz.generateRandomMaze
+  val mz = Maze()
+  mz.generateRandomMaze
+  while(mz.inc) {
     mz.inc
   }
 }
